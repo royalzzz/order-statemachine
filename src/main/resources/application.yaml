@@ -1,0 +1,18 @@
+spring:
+  output:
+    ansi:
+      enabled: always
+  datasource:
+    username: postgres
+    password: dotdot
+    url: jdbc:postgresql://127.0.0.1:5432/statemachine?useUnicode=true&characterEncoding=utf-8
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: true
+    show-sql: true
+    generate-ddl: true
+    database: postgresql
+    hibernate:
+      ddl-auto: update
+    naming:
+      physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
