@@ -1,5 +1,6 @@
 package com.example.config;
 
+import com.example.listener.OrderStateChangeListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,9 @@ class StateMachineConfig extends StateMachineConfigurerAdapter<String, String> {
     @Autowired
     private TransitionRepository<? extends RepositoryTransition> transitionRepository;
 
+    @Autowired
+    private OrderStateChangeListener orderStateChangeListener;
+
     @Override
     public void configure(StateMachineModelConfigurer<String, String> model) throws Exception {
         model
@@ -36,6 +40,7 @@ class StateMachineConfig extends StateMachineConfigurerAdapter<String, String> {
     public void configure(StateMachineConfigurationConfigurer<String, String> config) throws Exception {
         config
                 .withConfiguration()
-                .autoStartup(true);
+                .autoStartup(true)
+                .listener(orderStateChangeListener);
     }
 }

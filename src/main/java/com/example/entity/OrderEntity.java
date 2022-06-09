@@ -1,17 +1,33 @@
 package com.example.entity;
 
+import com.example.enums.OrderStatus;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "demo_order")
 public class OrderEntity {
 
-    int id;
-    String state;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    Long id;
 
-    public OrderEntity(int id, String state) {
-        this.id = id;
-        this.state = state;
+    @Enumerated(value = EnumType.STRING)
+    OrderStatus status;
+
+    public Long getId() {
+        return id;
     }
 
-    @Override
-    public String toString() {
-        return "Order [id=" + id + ", state=" + state + "]";
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
     }
 }
