@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("operate")
+@RequestMapping("order")
 public class OperateController {
 
     @Autowired
@@ -37,13 +37,18 @@ public class OperateController {
     @Autowired
     private StateMachinePersist<String, String, String> stateMachinePersist;
 
-    @GetMapping("order/create")
+    @GetMapping("create")
     @Transactional
     public Object createOrder() {
         String uuid = UUID.randomUUID().toString();
         StateMachine<String, String> stateMachine = stateMachineService.acquireStateMachine(uuid, true);
-//        stateMachine.sendEvent();
-        return stateMachine.getUuid();
+        return stateMachine.getId();
+    }
+
+    @GetMapping("get")
+    public Object getOrder(String uuid) {
+        StateMachine<String, String> stateMachine = stateMachineService.acquireStateMachine(UUID.fromString(uuid).toString());
+        return stateMachine;
     }
 
     @GetMapping("receive")
