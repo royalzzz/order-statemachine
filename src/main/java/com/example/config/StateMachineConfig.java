@@ -10,6 +10,7 @@ import org.springframework.statemachine.config.builders.StateMachineConfiguratio
 import org.springframework.statemachine.config.builders.StateMachineModelConfigurer;
 import org.springframework.statemachine.config.model.StateMachineModelFactory;
 import org.springframework.statemachine.data.*;
+import org.springframework.statemachine.persist.StateMachineRuntimePersister;
 
 @Configuration
 @EnableStateMachineFactory
@@ -23,6 +24,9 @@ class StateMachineConfig extends StateMachineConfigurerAdapter<String, String> {
 
     @Autowired
     private OrderStateChangeListener orderStateChangeListener;
+
+    @Autowired
+    private StateMachineRuntimePersister<String, String, String> stateMachineRuntimePersister;
 
     @Override
     public void configure(StateMachineModelConfigurer<String, String> model) throws Exception {
@@ -41,6 +45,9 @@ class StateMachineConfig extends StateMachineConfigurerAdapter<String, String> {
         config
                 .withConfiguration()
                 .autoStartup(true)
-                .listener(orderStateChangeListener);
+                .listener(orderStateChangeListener)
+                .and()
+                .withPersistence()
+                .runtimePersister(stateMachineRuntimePersister);;
     }
 }
