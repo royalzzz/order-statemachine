@@ -3,17 +3,18 @@ package com.example.entity;
 import com.example.enums.OrderStatus;
 
 import javax.persistence.*;
+import java.time.Instant;
 
-@Entity
-@Table(name = "demo_order")
+@Entity(name = "demo_order")
 public class OrderEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     Long id;
 
-    @Enumerated(value = EnumType.STRING)
     OrderStatus status;
+
+    Instant createTime;
 
     public Long getId() {
         return id;
@@ -29,5 +30,13 @@ public class OrderEntity {
 
     public void setStatus(OrderStatus status) {
         this.status = status;
+    }
+
+    public Instant getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Instant createTime) {
+        this.createTime = createTime;
     }
 }

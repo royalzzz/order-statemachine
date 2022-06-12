@@ -1,5 +1,13 @@
 package com.example.listener;
 
+import com.example.entity.OrderEntity;
+import com.example.enums.OrderEvents;
+import com.example.enums.OrderStatus;
+import com.example.repo.OrderRepo;
+import com.example.service.impl.OrderServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
@@ -8,66 +16,74 @@ import org.springframework.statemachine.state.State;
 import org.springframework.statemachine.transition.Transition;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
-public class OrderStateChangeListener extends StateMachineListenerAdapter<String, String> {
+public class OrderStateChangeListener extends StateMachineListenerAdapter<OrderStatus, OrderEvents> {
+
+    Logger logger = LoggerFactory.getLogger(OrderStateChangeListener.class);
+
+    @Autowired
+    private OrderRepo orderRepo;
 
     @Override
-    public void stateContext(StateContext<String, String> stateContext) {
-        System.out.println("Stage:" + stateContext.getStage() + "\t" + stateContext.getMessage());
+    public void stateContext(StateContext<OrderStatus, OrderEvents> stateContext) {
+        if (stateContext.getStage().equals(StateContext.Stage.STATE_CHANGED)) {
+            logger.info("state " + stateContext.getStateMachine().getId() + " changed...");
+            Optional.ofNullable(stateContext.getMessage()).flatMap(
+                    msg -> Optional.ofNullable((Long) msg.getHeaders().getOrDefault("orderId", -1L))).ifPresent(
+                    orderId1 -> {
+                        OrderEntity order = orderRepo.findById(orderId1).orElseThrow();
+                        order.setStatus(stateContext.getTarget().getId());
+                        orderRepo.save(order);
+                        logger.info("change order status: " + stateContext.getTarget().getId());
+                    }
+            );
+        }
     }
 
     @Override
-    public void stateChanged(State<String, String> from, State<String, String> to) {
-        System.out.println("stateChanged:");
+    public void stateChanged(State<OrderStatus, OrderEvents> from, State<OrderStatus, OrderEvents> to) {
+        logger.info(String.format("stateChanged(from: %s, to: %s)", from == null ? null : from.getId() + "", to == null? null :to.getId() + ""));
     }
 
     @Override
-    public void stateEntered(State<String, String> state) {
-        System.out.println("stateEntered:" + state.getId());
+    public void stateEntered(State<OrderStatus, OrderEvents> state) {
     }
 
     @Override
-    public void stateExited(State<String, String> state) {
-        System.out.println("stateExited:" + state.getId());
+    public void stateExited(State<OrderStatus, OrderEvents> state) {
     }
 
     @Override
-    public void transition(Transition<String, String> transition) {
-        System.out.println("transition:" + transition.getName());
+    public void transition(Transition<OrderStatus, OrderEvents> transition) {
     }
 
     @Override
-    public void transitionStarted(Transition<String, String> transition) {
-        System.out.println("transitionStarted:" + transition.getName());
+    public void transitionStarted(Transition<OrderStatus, OrderEvents> transition) {
     }
 
     @Override
-    public void transitionEnded(Transition<String, String> transition) {
-        System.out.println("transitionEnded:" + transition.getName());
+    public void transitionEnded(Transition<OrderStatus, OrderEvents> transition) {
     }
 
     @Override
-    public void stateMachineStarted(StateMachine<String, String> stateMachine) {
-        System.out.println("stateMachineStarted:" + stateMachine.getId());
+    public void stateMachineStarted(StateMachine<OrderStatus, OrderEvents> stateMachine) {
     }
 
     @Override
-    public void stateMachineStopped(StateMachine<String, String> stateMachine) {
-        System.out.println("stateMachineStopped:" + stateMachine.getId());
+    public void stateMachineStopped(StateMachine<OrderStatus, OrderEvents> stateMachine) {
     }
 
     @Override
-    public void eventNotAccepted(Message<String> event) {
-        System.out.println("eventNotAccepted:" + event.getPayload() + "\t" + event.getHeaders());
+    public void eventNotAccepted(Message<OrderEvents> event) {
     }
 
     @Override
     public void extendedStateChanged(Object key, Object value) {
-        System.out.println("extendedStateChanged:" + key + "\t" +value);
     }
 
     @Override
-    public void stateMachineError(StateMachine<String, String> stateMachine, Exception exception) {
-        System.out.println("stateMachineError:" + stateMachine.getId());
+    public void stateMachineError(StateMachine<OrderStatus, OrderEvents> stateMachine, Exception exception) {
     }
 }

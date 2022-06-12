@@ -1,5 +1,7 @@
 package com.example.enums;
 
 public enum OrderEvents {
-    PAYED, DELIVERY, RECEIVED;
+    FULFILL,
+    PAY,
+    CANCEL;
 }

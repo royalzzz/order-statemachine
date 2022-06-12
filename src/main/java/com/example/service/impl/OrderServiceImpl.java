@@ -3,68 +3,88 @@ package com.example.service.impl;
 import com.example.entity.OrderEntity;
 import com.example.enums.OrderEvents;
 import com.example.enums.OrderStatus;
+import com.example.repo.OrderRepo;
 import com.example.service.OrderService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.StateMachineContext;
+import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.statemachine.persist.StateMachineRuntimePersister;
+import org.springframework.statemachine.service.StateMachineService;
+import org.springframework.statemachine.state.State;
+import org.springframework.statemachine.support.DefaultStateMachineContext;
+import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
+import org.springframework.statemachine.transition.Transition;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Date;
+import java.util.Optional;
 
 @Service
 public class OrderServiceImpl implements OrderService {
 
-    private Long id = 1L;
-    private Map<Long, OrderEntity> orders = new HashMap<>();
+    Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
+
+    @Autowired
+    private OrderRepo orderRepo;
+
+    @Autowired
+    private StateMachineService<OrderStatus, OrderEvents> stateMachineService;
+
+    @Autowired
+    private StateMachineFactory<OrderStatus, OrderEvents> stateMachineFactory;
+
+    @Autowired
+    private StateMachineRuntimePersister<OrderStatus, OrderEvents, OrderEntity> stateMachineRuntimePersister;
+
+    @Override
+    public OrderEntity get(Long orderId) {
+        return orderRepo.findById(orderId).orElseThrow();
+    }
 
     @Override
     public OrderEntity create() {
         OrderEntity order = new OrderEntity();
-        order.setStatus(OrderStatus.WAIT_PAYMENT);
-        order.setId(id++);
-        orders.put(order.getId(), order);
-        return order;
+        order.setStatus(OrderStatus.SUBMITTED);
+        order.setCreateTime(new Date().toInstant());
+        DefaultStateMachineContext<OrderStatus, OrderEvents> defaultStateMachineContext = new DefaultStateMachineContext(order.getStatus(), null, null, null, null, null);
+        stateMachineRuntimePersister.write(defaultStateMachineContext);
+        return orderRepo.save(order);
     }
 
     @Override
-    public OrderEntity pay(Long id) {
-        OrderEntity order = orders.get(id);
-        System.out.println("线程名称：" + Thread.currentThread().getName() + " 尝试支付，订单号：" + id);
-        Message message = MessageBuilder.withPayload(OrderEvents.PAYED).
-                setHeader("order", order).build();
-//        if (!sendEvent(message, order)) {
-//            System.out.println("线程名称：" + Thread.currentThread().getName() + " 支付失败, 状态异常，订单号：" + id);
-//        }
-        return orders.get(id);
-
+    public OrderEntity fulfill(Long orderId) {
+        StateMachine<OrderStatus, OrderEvents> stateMachine = this.build(orderId);
+        logger.info("before calling fulfill(): " + stateMachine.getState().getId());
+        stateMachine.sendEvent(Mono.just(MessageBuilder.withPayload(OrderEvents.FULFILL)
+                .setHeader("orderId", orderId)
+                .build())).blockLast();
+        stateMachine.stopReactively().block();
+        logger.info("after calling fulfill(): " + stateMachine.getState().getId());
+        return get(orderId);
     }
 
     @Override
-    public OrderEntity deliver(Long id) {
-        OrderEntity order = orders.get(id);
-        System.out.println("线程名称：" + Thread.currentThread().getName() + " 尝试发货，订单号：" + id);
-//        if (!sendEvent(MessageBuilder.withPayload(OrderEvents.DELIVERY)
-//                .setHeader("order", order).build(), orders.get(id))) {
-//            System.out.println("线程名称：" + Thread.currentThread().getName() + " 发货失败，状态异常，订单号：" + id);
-//        }
-        return orders.get(id);
+    public OrderEntity pay(Long orderId, String paymentConfirmationNumber) {
+        StateMachine<OrderStatus, OrderEvents> stateMachine = this.build(orderId);
+        logger.info("before calling pay(): " + stateMachine.getState().getId());
+        stateMachine.sendEvent(Mono.just(MessageBuilder.withPayload(OrderEvents.PAY)
+                .setHeader("orderId", orderId)
+                .setHeader("paymentConfirmationNumber", paymentConfirmationNumber)
+                .build())).blockLast();
+        stateMachine.stopReactively().block();
+        logger.info("after calling pay(): " + stateMachine.getState().getId());
+        return get(orderId);
     }
 
-    @Override
-    public OrderEntity receive(Long id) {
-        OrderEntity order = orders.get(id);
-        System.out.println("线程名称：" + Thread.currentThread().getName() + " 尝试收货，订单号：" + id);
-//        if (!sendEvent(MessageBuilder.withPayload(OrderEvents.RECEIVED)
-//                .setHeader("order", order).build(), orders.get(id))) {
-//            System.out.println("线程名称：" + Thread.currentThread().getName() + " 收货失败，状态异常，订单号：" + id);
-//        }
-        return orders.get(id);
+    private StateMachine<OrderStatus, OrderEvents> build(Long orderId) {
+        OrderEntity order = orderRepo.findById(orderId).orElseThrow();
+        String orderIdKey = Long.toString(order.getId());
+        return stateMachineService.acquireStateMachine(orderIdKey, true);
     }
-
-    @Override
-    public Map<Long, OrderEntity> getOrders() {
-        return orders;
-    }
-
-
 }

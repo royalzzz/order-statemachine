@@ -1,5 +1,8 @@
 package com.example.config;
 
+import com.example.entity.OrderEntity;
+import com.example.enums.OrderEvents;
+import com.example.enums.OrderStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.config.StateMachineFactory;
@@ -13,15 +16,15 @@ import org.springframework.statemachine.service.StateMachineService;
 public class StateMachinePersisterConfig {
 
     @Bean
-    public StateMachineRuntimePersister<String, String, String> stateMachineRuntimePersister(
+    public StateMachineRuntimePersister<OrderStatus, OrderEvents, String> stateMachineRuntimePersister(
             JpaStateMachineRepository jpaStateMachineRepository) {
         return new JpaPersistingStateMachineInterceptor<>(jpaStateMachineRepository);
     }
 
     @Bean
-    public StateMachineService<String, String> stateMachineService(
-            StateMachineFactory<String, String> stateMachineFactory,
-            StateMachineRuntimePersister<String, String, String> stateMachineRuntimePersister) {
-        return new DefaultStateMachineService<String, String>(stateMachineFactory, stateMachineRuntimePersister);
+    public StateMachineService<OrderStatus, OrderEvents> stateMachineService(
+            StateMachineFactory<OrderStatus, OrderEvents> stateMachineFactory,
+            StateMachineRuntimePersister<OrderStatus, OrderEvents, String> stateMachineRuntimePersister) {
+        return new DefaultStateMachineService<OrderStatus, OrderEvents>(stateMachineFactory, stateMachineRuntimePersister);
     }
 }
