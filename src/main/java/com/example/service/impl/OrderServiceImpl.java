@@ -13,6 +13,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.StateMachineContext;
 import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.statemachine.persist.StateMachineRuntimePersister;
 import org.springframework.statemachine.service.StateMachineService;
 import org.springframework.statemachine.state.State;
@@ -42,6 +43,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private StateMachineRuntimePersister<OrderStatus, OrderEvents, OrderEntity> stateMachineRuntimePersister;
 
+    @Autowired
+    private StateMachinePersister<OrderStatus, OrderEvents, OrderEntity> stateMachinePersister;
+
     @Override
     public OrderEntity get(Long orderId) {
         return orderRepo.findById(orderId).orElseThrow();
@@ -54,6 +58,8 @@ public class OrderServiceImpl implements OrderService {
         order.setCreateTime(new Date().toInstant());
         DefaultStateMachineContext<OrderStatus, OrderEvents> defaultStateMachineContext = new DefaultStateMachineContext(order.getStatus(), null, null, null, null, null);
         stateMachineRuntimePersister.write(defaultStateMachineContext);
+        stateMachinePersister.persist();
+        stateMachinePersister.restore();
         return orderRepo.save(order);
     }
 
