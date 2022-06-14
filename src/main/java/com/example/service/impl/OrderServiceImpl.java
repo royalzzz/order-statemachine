@@ -77,12 +77,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderEntity pay(Long orderId, String paymentConfirmationNumber) {
+    public OrderEntity pay(Long orderId, String payCode) {
         StateMachine<OrderStatus, OrderEvents> stateMachine = this.getStateMachine(orderId);
         logger.info("before calling pay(): " + stateMachine.getState().getId());
         stateMachine.sendEvent(Mono.just(MessageBuilder.withPayload(OrderEvents.PAY)
                 .setHeader("orderId", orderId)
-                .setHeader("paymentConfirmationNumber", paymentConfirmationNumber)
+                .setHeader("payCode", payCode)
                 .build())).blockLast();
         logger.info("after calling pay(): " + stateMachine.getState().getId());
         return get(orderId);
