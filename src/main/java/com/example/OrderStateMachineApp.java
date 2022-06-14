@@ -6,9 +6,9 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 @SpringBootApplication
 @EntityScan(basePackages = {"com.example.entity"})
-public class OrderStateApp {
+public class OrderStateMachineApp {
 
     public static void main(String[] args) {
-        SpringApplication.run(OrderStateApp.class, args);
+        SpringApplication.run(OrderStateMachineApp.class, args);
     }
 }

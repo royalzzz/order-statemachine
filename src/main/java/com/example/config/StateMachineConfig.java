@@ -47,7 +47,6 @@ class StateMachineConfig extends StateMachineConfigurerAdapter<OrderStatus, Orde
     public void configure(StateMachineConfigurationConfigurer<OrderStatus, OrderEvents> config) throws Exception {
         config
                 .withConfiguration()
-                .autoStartup(true)
                 .listener(orderStateChangeListener)
                 .and()
                 .withPersistence()

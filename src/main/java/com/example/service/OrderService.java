@@ -13,5 +13,6 @@ public interface OrderService {
     OrderEntity pay(Long orderId, String paymentConfirmationNumber);
     //订单完成
     OrderEntity fulfill(Long orderId);
-
+    //订单取消
+    OrderEntity cancel(Long orderId);
 }

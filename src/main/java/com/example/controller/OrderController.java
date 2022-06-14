@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("order")
-public class OperateController {
+public class OrderController {
 
     @Autowired
     private OrderService orderService;
@@ -36,5 +36,10 @@ public class OperateController {
     @GetMapping("fulfill")
     public Object fulfill(Long orderId) {
         return orderService.fulfill(orderId);
+    }
+
+    @GetMapping("cancel")
+    public Object cancel(Long orderId) {
+        return orderService.cancel(orderId);
     }
 }

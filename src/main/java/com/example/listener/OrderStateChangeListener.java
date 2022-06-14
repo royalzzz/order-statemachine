@@ -29,7 +29,6 @@ public class OrderStateChangeListener extends StateMachineListenerAdapter<OrderS
     @Override
     public void stateContext(StateContext<OrderStatus, OrderEvents> stateContext) {
         if (stateContext.getStage().equals(StateContext.Stage.STATE_CHANGED)) {
-            logger.info("state " + stateContext.getStateMachine().getId() + " changed...");
             Optional.ofNullable(stateContext.getMessage()).flatMap(
                     msg -> Optional.ofNullable((Long) msg.getHeaders().getOrDefault("orderId", -1L))).ifPresent(
                     orderId1 -> {

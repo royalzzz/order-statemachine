@@ -1,6 +1,5 @@
 package com.example.config;
 
-import com.example.entity.OrderEntity;
 import com.example.enums.OrderEvents;
 import com.example.enums.OrderStatus;
 import org.springframework.context.annotation.Bean;
